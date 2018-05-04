@@ -49,16 +49,44 @@ app.register_blueprint(admin_blueprint,url_prefix = "/admin")
 from . import admin
 @admin.route("/")
 ```
-#### 数据库  flask-sqlalchemy
+#### 数据库ORM  flask-sqlalchemy
 安装：
 > pip install flask-sqlalchemy
 
 链接：
 ```text
-
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://账号:密码@127.0.0.1:3306/数据库"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+db = SQLAlchemy(app)
 ```
+##### 引入资源文件与前端页面：
+> 说明：静态文件在static目录下，页面放在 templates
 
+引入模板
+> from flask import Flask,render_template
 
+引入静态资源文件：
+> href="{{ url_for('static',filename='路径')}}
 
+返回页面：
+> return render_template('xxx.html')
+```
+静态文件引入： {{url_for('static',filename='文件路径')}}
+定义路由：{{url_for(’模块名.视图名‘，变量=参数)}}
+定义数据块：{% block 数据块名称 %}... {% endblock%}
+```
+##### 登陆页面的搭建：
+```
+@home.route("/login/")  登陆
+from flask import render_template,redirect,url_for
+@home.route("/logout/") 注销 -- 重定向
+@home.route("/regist/") 注册
+
+继承公共页面
+{% extends "home/home.html" %}
+在代码块中填入单独的央视
+{% block content %}
+{% endblock %}
 
 

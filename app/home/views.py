@@ -6,8 +6,25 @@
 # @Desc  ：前端视图
 
 from . import home
+from flask import render_template,redirect,url_for
 
 
+# 主页
 @home.route("/")
 def index():
-    return "我是前端页面"
+    return render_template("home/index.html")
+
+# 登陆
+@home.route("/login/")
+def login():
+    return render_template("home/login.html")
+
+# 注销
+@home.route("/logout/")
+def logout():
+    return redirect(url_for("home.login"))
+
+# 注册
+@home.route("/regist/")
+def regist():
+    return render_template("home/regist.html")
