@@ -88,5 +88,11 @@ from flask import render_template,redirect,url_for
 在代码块中填入单独的央视
 {% block content %}
 {% endblock %}
+```
+##### 用户详情与用户页面的搭建：
+会员中心 修改密码 评论管理 登陆日志 电影收藏
+```
+{% include "home/menu.html" %} 包含页面
+```
 
 
