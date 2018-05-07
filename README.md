@@ -100,4 +100,16 @@ from flask import render_template,redirect,url_for
 ##### 搜索页面：
 ##### 播放页面：
 ##### 后台管理页面：
-登陆 退出 admin父模版 导航页面 修改密码 控制面板
+```
+登陆-login 退出-logout 父模版-admin 导航页面-nav 修改密码-pwd
+控制面板-index 标签页面/添加-tag 影视管理-movie 幕布推荐-preview
+会员管理-user 评论管理-comment 收藏管理-moviecol
+操作日志-oplog 管理员日志-adminlog 会员登陆日志-userlog
+角色管理-role  权限管理-auth 管理员-admin
+```
+
+
+
+
+
+
