@@ -94,5 +94,10 @@ from flask import render_template,redirect,url_for
 ```
 {% include "home/menu.html" %} 包含页面
 ```
+##### 首页的搭建：
+{% for v in range(1,13) %} for 语法使用 与轮播图的实现
 
-
+##### 搜索页面：
+##### 播放页面：
+##### 后台管理页面：
+登陆 退出 admin父模版 导航页面 修改密码 控制面板
