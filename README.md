@@ -115,6 +115,12 @@ from flask import render_template,redirect,url_for
 app.config["SECRET_KEY"] = 'xxxx'
 form.py 配置 与验证 拦截登陆
 ```
+##### 标签管理：
+```
+添加标签 标签的列表分页显示
+分页操作：url_for('url',page=page)
+修改与删除
+```
 
 
 

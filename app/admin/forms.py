@@ -9,8 +9,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 # 验证
 from wtforms.validators import DataRequired, ValidationError
+
 # 引入数据
-from app.modules import Admin
+from app.modules import Admin, Tag
 
 
 class LoginForm(FlaskForm):
@@ -32,12 +33,12 @@ class LoginForm(FlaskForm):
     pwd = PasswordField(
         label='密码',
         validators=[
-            DataRequired('请输入密码!')
+            DataRequired('请输入您的密码!')
         ],
         description='密码',
         render_kw={
             "class": "form-control",
-            "placeholder": "请输入密码！",
+            "placeholder": "请输入您的密码！",
         }
     )
     # 登陆按钮
@@ -49,9 +50,32 @@ class LoginForm(FlaskForm):
     )
 
     # 验证
-    def validate_account(self,field):
+    def validate_account(self, field):
         account = field.data
         # 查询账号是否存在
         admin = Admin.query.filter_by(name=account)
-        if admin == 0 :
+        if admin == 0:
             raise ValidationError('你输入的账号不存在！')
+
+
+class TagForm(FlaskForm):
+    '''电影标签添加'''
+    # 电影标签名
+    name = StringField(
+        label="电影标签",
+        validators=[
+            DataRequired('请输入您要增加的标签！')
+        ],
+        description="电影标签",
+        render_kw={
+            "class": "form-control",
+            "id": "input_name",
+            "placeholder": "请输入标签名称！"
+        }
+    )
+    submit = SubmitField(
+        '增加标签',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
