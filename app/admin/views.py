@@ -6,7 +6,11 @@
 # @Desc  : 后端视图
 
 from . import admin
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, session, flash, request
+# 引入表单验证
+from app.admin.forms import LoginForm
+# 引入数据类型
+from app.modules import Admin
 
 
 # 主页
@@ -16,9 +20,26 @@ def index():
 
 
 # 管理员登陆
-@admin.route("/login/")
+@admin.route("/login/", methods=['GET', 'POST'])
 def login():
-    return render_template("admin/login.html")
+    # 传入到form
+    form = LoginForm()
+    # 提交验证
+    if form.validate_on_submit():
+        # 用户输入数据
+        data = form.data
+        # 获取数据库账号
+        admin = Admin.query.filter_by(name=data['account']).first()
+        if admin == None:
+            flash("您输入的账号不存在", "err")
+            return redirect(url_for("admin.login"))
+        if not admin.check_pwd(data['pwd']):
+            flash("您输入的密码错误","err")
+            return redirect(url_for("admin.login"))
+        # 绑定session
+        session['admin'] = data['account']
+        return redirect(request.args.get("next") or url_for("admin.index"))
+    return render_template("admin/login.html",form=form)
 
 
 # 管理员退出
@@ -116,25 +137,30 @@ def userlog_list():
 def role_add():
     return render_template("admin/role_add.html")
 
+
 # 角色列表
 @admin.route("/role/list/")
 def role_list():
     return render_template("admin/role_list.html")
+
 
 # 添加权限
 @admin.route("/auth/add/")
 def auth_add():
     return render_template("admin/auth_add.html")
 
+
 # 权限列表
 @admin.route("/auth/list/")
 def auth_list():
     return render_template("admin/auth_list.html")
 
+
 # 添加管理员
 @admin.route("/admin/add/")
 def admin_add():
     return render_template("admin/admin_add.html")
+
 
 # 管理员列表
 @admin.route("/admin/list/")

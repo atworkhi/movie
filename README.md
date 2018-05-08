@@ -107,8 +107,14 @@ from flask import render_template,redirect,url_for
 操作日志-oplog 管理员日志-adminlog 会员登陆日志-userlog
 角色管理-role  权限管理-auth 管理员-admin
 ```
-
-
+### 后端实现
+##### 登陆实现：
+```
+导入 flask-wtf 实现表单的验证
+配置 csrf_token
+app.config["SECRET_KEY"] = 'xxxx'
+form.py 配置 与验证 拦截登陆
+```
 
 
 
