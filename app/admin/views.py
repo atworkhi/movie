@@ -17,7 +17,7 @@ from functools import wraps
 from app import db, app
 # 对文件的操作
 import os, datetime, uuid
-# 文件名的安全性
+# 文件名的安全性 不支持中文格式的文件名
 from werkzeug.utils import secure_filename
 
 
@@ -181,8 +181,10 @@ def movie_add():
             return redirect(url_for('admin.movie_add'))
         # 如果库中不存在电影则添加
         # 对上传文件进行处理
-        file_url = secure_filename(form.url.data.filename)
-        file_logo = secure_filename(form.logo.data.filename)
+        file_url = form.url.data.filename
+        print(file_url)
+        file_logo = form.logo.data.filename
+        print(file_logo)
         # 上传路径是否存在
         if not os.path.exists(app.config['UP_DIR']):
             os.makedirs(app.config['UP_DIR'])  # 创建文件目录
@@ -233,7 +235,6 @@ def movie_list(page=None):
 # 删除电影
 @admin.route("/movie/del/<int:id>/", methods=["GET"])
 @admin_login_req
-# @admin_auth
 def movie_del(id=None):
     movie = Movie.query.get_or_404(int(id))
     db.session.delete(movie)
@@ -243,6 +244,25 @@ def movie_del(id=None):
     os.remove(app.config['UP_DIR'] + movie.logo)
     flash("删除%s电影成功！" % movie.title, "ok")
     return redirect(url_for('admin.movie_list', page=1))
+# 编辑电影
+@admin.route("/movie/edit/<int:id>/", methods=['GET','POST'])
+@admin_login_req
+def movie_edit(id=None):
+    form = MovieForm()
+    # 根据id查询需要修改的数据
+    movie = Movie.query.get_or_404(id)
+    # 判断是什么GET请求进行回显下拉选择
+    if request.method == "GET":
+        form.info.data = movie.info     # 对文本域进行赋值
+        form.tag_id.data = movie.tag_id # 对下拉框回显
+        form.star.data = movie.star     # 对下拉框回显
+    if form.validate_on_submit():
+        data = form.data
+        flash("修改电影成功", "ok")
+        return redirect(url_for("admin.movie_edit", id=movie.id))
+    # movie = movie 为给前台赋值
+    return render_template("admin/movie_edit.html", form=form, movie=movie)
+
 
 
 # 添加预告

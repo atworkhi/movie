@@ -162,7 +162,21 @@ def change_filename(filename):
         form.url.data.save(app.config['UP_DIR'] + url)
         form.logo.data.save(app.config['UP_DIR'] + logo)
 分页显示:
+    @admin.route("/movie/list/<int:page>/", methods=["GET"])
+    # 从数据库关联查询
+    page_data = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id
+    ).order_by(
+        Movie.addtime.desc()
+    ).paginate(page=page, per_page=10)
 
+删除：根据ID进行删除 def movie_del
+修改：获取值进行回显：注意 文本域与下拉框不能直接赋值回显
+    # 判断是什么GET请求进行回显下拉选择
+    if request.method == "GET":
+        form.info.data = movie.info     # 对文本域进行赋值
+        form.tag_id.data = movie.tag_id # 对下拉框回显
+        form.star.data = movie.star     # 对下拉框回显
 
 
 
