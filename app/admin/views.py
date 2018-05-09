@@ -8,13 +8,17 @@
 from . import admin
 from flask import render_template, redirect, url_for, session, flash, request
 # 引入表单验证
-from app.admin.forms import LoginForm, TagForm
+from app.admin.forms import LoginForm, TagForm, MovieForm
 # 引入数据类型
-from app.modules import Admin, Tag
+from app.modules import Admin, Tag, Movie
 # 引入登陆装饰器
 from functools import wraps
 # 导入数据库
-from app import db
+from app import db, app
+# 对文件的操作
+import os, datetime, uuid
+# 文件名的安全性
+from werkzeug.utils import secure_filename
 
 
 # 登陆装饰器
@@ -26,6 +30,15 @@ def admin_login_req(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+# 修改文件名
+def change_filename(filename):
+    # 对文件名进行分割
+    fileinfo = os.path.splitext(filename)
+    # 时间搓+ uuid+ 后缀
+    filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex) + fileinfo[-1]
+    return filename
 
 
 # 主页
@@ -102,7 +115,7 @@ def tag_add():
 @admin.route("/tag/list/<int:page>/", methods=["GET"])
 @admin_login_req
 def tag_list(page=None):
-    '''分页查询'''
+    '''分页查询标签'''
     if page is None:
         page = 1
     # paginate page 参数为页码 per_page为每页页数
@@ -112,18 +125,124 @@ def tag_list(page=None):
     return render_template("admin/tag_list.html", page_data=page_data)
 
 
+# 删除标签
+@admin.route("/tag/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def tag_del(id=None):
+    '''删除标签'''
+    # 根据ID查询删除的标签
+    tag = Tag.query.filter_by(id=id).first_or_404()
+    db.session.delete(tag)
+    db.session.commit()
+    # 闪现消息
+    flash('删除"%s"标签成功' % tag.name, "ok")
+    return redirect(url_for('admin.tag_list', page=1))
+
+
+# 编辑标签
+@admin.route("/tag/edit/<int:id>", methods=['GET', 'POST'])
+@admin_login_req
+def tag_edit(id):
+    # 导入form
+    form = TagForm()
+    # 获取需要修改的tag
+    tag = Tag.query.get_or_404(id)
+    if form.validate_on_submit():
+        # 获取页面数据
+        data = form.data
+        # 查找名称看是否存在
+        tag_count = Tag.query.filter_by(name=data["name"]).count()
+        # 判断是否修改了名称并验证是否重复
+        if tag.name != data['name'] and tag_count != 0:
+            flash("修改的标签名称已存在", "err")
+            return redirect(url_for('admin.tag_edit', id=id))
+        # 获取前段数据绑定到ORM中
+        tag.name = data['name']
+        # 添加数据库
+        db.session.add(tag)
+        db.session.commit()
+        flash("修改标签名称成功", "ok")
+    return render_template("admin/tag_edit.html", form=form, tag=tag)
+
+
 # 添加电影
-@admin.route("/movie/add/")
+@admin.route("/movie/add/", methods=['GET', 'POST'])
 @admin_login_req
 def movie_add():
-    return render_template("admin/movie_add.html")
+    form = MovieForm()
+    # 上传电影操作
+    if form.validate_on_submit():
+        # 获取表单数据
+        data = form.data
+        # 查找电影看是否存在
+        movie = Movie.query.filter_by(title=data["title"]).count()
+        if movie != 0:
+            flash("您要添加的电影已存在库中", "err")
+            return redirect(url_for('admin.movie_add'))
+        # 如果库中不存在电影则添加
+        # 对上传文件进行处理
+        file_url = secure_filename(form.url.data.filename)
+        file_logo = secure_filename(form.logo.data.filename)
+        # 上传路径是否存在
+        if not os.path.exists(app.config['UP_DIR']):
+            os.makedirs(app.config['UP_DIR'])  # 创建文件目录
+            os.chmod(app.config['UP_DIR'], 'rw')  # 读写权限
+        # 改名
+        url = change_filename(file_url)
+        logo = change_filename(file_logo)
+        # 保存
+        form.url.data.save(app.config['UP_DIR'] + url)
+        form.logo.data.save(app.config['UP_DIR'] + logo)
+        movie = Movie(
+            title=data["title"],
+            url=url,  # 文件类型
+            info=data['info'],
+            logo=logo,  # 文件类型
+            star=int(data["star"]),  # 星级需要转换int
+            playnum=0,
+            commentnum=0,
+            tag_id=int(data['tag_id']),
+            area=data['area'],
+            release_time=data['release_time'],
+            length=data['length']
+        )
+        # 保存数据库
+        db.session.add(movie)
+        db.session.commit()
+        flash("添加电影%s成功" % movie.title, "ok")
+        return redirect(url_for('admin.movie_add'))
+    return render_template("admin/movie_add.html", form=form)
 
 
-# 电影列表
-@admin.route("/movie/list/")
+# 分页电影列表
+@admin.route("/movie/list/<int:page>/", methods=["GET"])
 @admin_login_req
-def movie_list():
-    return render_template("admin/movie_list.html")
+def movie_list(page=None):
+    '''分页显示电影列表'''
+    if page is None:
+        page = 1
+    # 从数据库关联查询
+    page_data = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id
+    ).order_by(
+        Movie.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/movie_list.html", page_data=page_data)
+
+
+# 删除电影
+@admin.route("/movie/del/<int:id>/", methods=["GET"])
+@admin_login_req
+# @admin_auth
+def movie_del(id=None):
+    movie = Movie.query.get_or_404(int(id))
+    db.session.delete(movie)
+    db.session.commit()
+    # 删除影片
+    os.remove(app.config['UP_DIR'] + movie.url)
+    os.remove(app.config['UP_DIR'] + movie.logo)
+    flash("删除%s电影成功！" % movie.title, "ok")
+    return redirect(url_for('admin.movie_list', page=1))
 
 
 # 添加预告

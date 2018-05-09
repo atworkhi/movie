@@ -108,19 +108,62 @@ from flask import render_template,redirect,url_for
 角色管理-role  权限管理-auth 管理员-admin
 ```
 ### 后端实现
-##### 登陆实现：
 ```
 导入 flask-wtf 实现表单的验证
+from wtforms import---导入Forms
+StringField---文本框
+PasswordField---密码框
+SubmitField---提交按钮
+FileField---文件选择
+TextAreaField---文本域
+SelectField---下拉选择框
+```
+##### 登陆实现：
+```
 配置 csrf_token
 app.config["SECRET_KEY"] = 'xxxx'
 form.py 配置 与验证 拦截登陆
+def admin_login_req(f): 登陆装饰器用于拦截未登陆的用户
 ```
 ##### 标签管理：
 ```
 添加标签 标签的列表分页显示
 分页操作：url_for('url',page=page)
-修改与删除
+修改:
+@admin.route("/tag/edit/<int:id>", methods=['GET', 'POST'])
+删除：
+@admin.route("/tag/del/<int:id>/", methods=["GET"])
 ```
+##### 电影管理：
+```
+添加:
+MovieForm 表单中定义需要添加的组的字段
+上传电影与logo文件的设置：
+app.config['UP_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
+为上传文件改名：时间搓+后缀
+def change_filename(filename):
+    # 对文件名进行分割
+    fileinfo = os.path.splitext(filename)
+    # 时间搓+ uuid+ 后缀
+    filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex) + fileinfo[-1]
+    return filename
+上传文件:
+     # 对上传文件进行处理
+        file_url = secure_filename(form.url.data.filename)
+        file_logo = secure_filename(form.logo.data.filename)
+        # 上传路径是否存在
+        if not os.path.exists(app.config['UP_DIR']):
+            os.makedirs(app.config['UP_DIR'])     # 创建文件目录
+            os.chmod(app.config['UP_DIR'], 'rw')  # 读写权限
+        # 改名
+        url = change_filename(file_url)
+        logo = change_filename(file_logo)
+        # 保存
+        form.url.data.save(app.config['UP_DIR'] + url)
+        form.logo.data.save(app.config['UP_DIR'] + logo)
+分页显示:
+
+
 
 
 
