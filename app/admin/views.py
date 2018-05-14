@@ -182,9 +182,9 @@ def movie_add():
         # 如果库中不存在电影则添加
         # 对上传文件进行处理
         file_url = form.url.data.filename
-        print(file_url)
+        # print(file_url)
         file_logo = form.logo.data.filename
-        print(file_logo)
+        # print(file_logo)
         # 上传路径是否存在
         if not os.path.exists(app.config['UP_DIR']):
             os.makedirs(app.config['UP_DIR'])  # 创建文件目录
@@ -203,7 +203,7 @@ def movie_add():
             star=int(data["star"]),  # 星级需要转换int
             playnum=0,
             commentnum=0,
-            tag_id=int(data['tag_id']),
+            tag_id=int("tag_id"),
             area=data['area'],
             release_time=data['release_time'],
             length=data['length']
@@ -244,25 +244,57 @@ def movie_del(id=None):
     os.remove(app.config['UP_DIR'] + movie.logo)
     flash("删除%s电影成功！" % movie.title, "ok")
     return redirect(url_for('admin.movie_list', page=1))
+
+
 # 编辑电影
-@admin.route("/movie/edit/<int:id>/", methods=['GET','POST'])
+@admin.route("/movie/edit/<int:id>/", methods=['GET', 'POST'])
 @admin_login_req
 def movie_edit(id=None):
     form = MovieForm()
+    form.url.validators = []
+    form.logo.validators = []
     # 根据id查询需要修改的数据
     movie = Movie.query.get_or_404(id)
     # 判断是什么GET请求进行回显下拉选择
     if request.method == "GET":
-        form.info.data = movie.info     # 对文本域进行赋值
-        form.tag_id.data = movie.tag_id # 对下拉框回显
-        form.star.data = movie.star     # 对下拉框回显
+        form.info.data = movie.info  # 对文本域进行赋值
+        form.tag_id.data = movie.tag_id  # 对下拉框回显
+        form.star.data = movie.star  # 对下拉框回显
     if form.validate_on_submit():
         data = form.data
+        # 判断需要修改的片名是否存在
+        movie_count = Movie.query.filter_by(title=data["title"]).count()
+        if movie_count != 0 and movie.title != data['title']:
+            flash("片名已存在！", 'err')
+            return redirect(url_for('admin.movie_edit', id=id))
+        # 修改片名与封面
+        if not os.path.exists(app.config["UP_DIR"]):
+            os.makedirs(app.config["UP_DIR"])
+            os.chmod(app.config["UP_DIR"], "rw")
+        if form.url.data != "":
+            os.remove(app.config['UP_DIR'] + movie.url)
+            file_url = form.url.data.filename
+            movie.url = change_filename(file_url)
+            form.url.data.save(app.config["UP_DIR"] + movie.url)
+        if form.logo.data != "":
+            os.remove(app.config['UP_DIR'] + movie.logo)
+            file_logo = form.logo.data.filename
+            movie.logo = change_filename(file_logo)
+            form.logo.data.save(app.config["UP_DIR"] + movie.logo)
+        # 修改的数据
+        movie.star = data['star']
+        movie.tag_id = data['tag_id']
+        movie.info = data["info"]
+        movie.title = data["title"]
+        movie.area = data["area"]
+        movie.length = data["length"]
+        movie.release_time = data["release_time"]
+        db.session.add(movie)
+        db.session.commit()
         flash("修改电影成功", "ok")
         return redirect(url_for("admin.movie_edit", id=movie.id))
     # movie = movie 为给前台赋值
     return render_template("admin/movie_edit.html", form=form, movie=movie)
-
 
 
 # 添加预告
