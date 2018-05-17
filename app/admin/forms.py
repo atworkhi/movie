@@ -144,7 +144,7 @@ class MovieForm(FlaskForm):
         validators=[
             DataRequired("请选择电影星级")
         ],
-        coerce=int, # 转为int
+        coerce=int,  # 转为int
         choices=[(1, "1星"), (2, "2星"), (3, "3星"), (4, "4星"), (5, "5星")],
         description="星级",
         render_kw={
@@ -219,6 +219,51 @@ class MovieForm(FlaskForm):
     # 修改
     submitedit = SubmitField(
         '修改电影',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+
+
+class PreviewForm(FlaskForm):
+    '''预告管理'''
+    # 电影名称
+    title = StringField(
+        label='电影预告标题',
+        # 非空校验
+        validators=[
+            DataRequired('请输入电影预告名称')
+        ],
+        description="电影预告标题",
+        render_kw={
+            "class": "form-control",
+            "id": "input_title",
+            "placeholder": "电影预告标题",
+        }
+    )
+
+    # 电影封面
+    logo = FileField(
+        label='电影封面',
+        validators=[
+            DataRequired("请选择电影封面")
+        ],
+        description='电影封面',
+        render_kw={
+            "id": "input_logo"
+        }
+    )
+    # 提交
+    submitadd = SubmitField(
+        '添加电影预告',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+
+    # 修改
+    submitedit = SubmitField(
+        '修改电影预告',
         render_kw={
             "class": "btn btn-primary",
         }

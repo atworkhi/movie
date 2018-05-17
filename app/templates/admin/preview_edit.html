@@ -24,7 +24,7 @@
                                 <div class="alert alert-success alert-dismissible">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×
                                     </button>
-                                    <h4><i class="icon fa fa-check"></i> 添加预告成功</h4>
+                                    <h4><i class="icon fa fa-check"></i> 编辑预告成功</h4>
                                     {{ msg }}
                                 </div>
                             {% endfor %}
@@ -32,13 +32,14 @@
                                 <div class="alert alert-danger alert-dismissible">
                                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×
                                     </button>
-                                    <h4><i class="icon fa fa-ban"></i> 添加预告失败</h4>
+                                    <h4><i class="icon fa fa-ban"></i> 编辑预告失败</h4>
                                     {{ msg }}
                                 </div>
                             {% endfor %}
+                            <input type="hidden" name="id" value="{{ preview.id }}">
                             <div class="form-group">
                                 <label for="input_title">{{ form.title.label }}</label>
-                                {{ form.title }}
+                                {{ form.title(value=preview.title) }}
                                 {% for err in form.title.errors %}
                                     <div class="col-md-12">
                                         <font style="color:red">{{ err }}</font>
@@ -53,13 +54,13 @@
                                         <font style="color:red">{{ err }}</font>
                                     </div>
                                 {% endfor %}
-                                <img data-src="holder.js/700x320" style="margin-top:5px;" class="img-responsive"
+                                <img src="{{ url_for('static',filename='uploads/previews/'+preview.logo) }}" style="margin-top:5px;" class="img-responsive"
                                      alt="">
                             </div>
                         </div>
                         <div class="box-footer">
                             {{ form.csrf_token }}
-                            {{ form.submitadd }}
+                            {{ form.submitedit}}
                         </div>
                     </form>
                 </div>

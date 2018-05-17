@@ -8,9 +8,9 @@
 from . import admin
 from flask import render_template, redirect, url_for, session, flash, request
 # 引入表单验证
-from app.admin.forms import LoginForm, TagForm, MovieForm
+from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm
 # 引入数据类型
-from app.modules import Admin, Tag, Movie
+from app.modules import Admin, Tag, Movie, Preview
 # 引入登陆装饰器
 from functools import wraps
 # 导入数据库
@@ -298,17 +298,101 @@ def movie_edit(id=None):
 
 
 # 添加预告
-@admin.route("/preview/add/")
+@admin.route("/preview/add/", methods=['GET', 'POST'])
 @admin_login_req
 def preview_add():
-    return render_template("admin/preview_add.html")
+    form = PreviewForm()
+    if form.validate_on_submit():
+        data = form.data
+        # 验证电影预告是否已经存在
+        preview = Preview.query.filter_by(title=data["title"]).count()
+        if preview != 0:
+            flash("您要添加的电影预告已存在", "err")
+            return redirect(url_for('admin.preview_add'))
+        # 如果不存在在添加 其中涉及文件上传
+        file_logo = form.logo.data.filename
+        # 判断上传路径是否存在
+        if not os.path.exists(app.config['UP_PREVIEW']):
+            os.makedirs(app.config['UP_PREVIEW'])
+            os.chmod(app.config['UP_PREVIEW'], 'rw')
+        # 改名进行上传
+        logo = change_filename(file_logo)
+        # 上传
+        form.logo.data.save(app.config['UP_PREVIEW'] + logo)
+        preview = Preview(
+            title=data['title'],
+            logo=logo
+        )
+        # 保存数据库
+        db.session.add(preview)
+        db.session.commit()
+        flash("添加电影预告%s成功" % preview.title, 'ok')
+        return redirect(url_for('admin.preview_add'))
+    return render_template("admin/preview_add.html", form=form)
 
 
 # 预告列表
-@admin.route("/preview/list/")
+@admin.route("/preview/list/<int:page>/", methods=['GET'])
 @admin_login_req
-def preview_list():
-    return render_template("admin/preview_list.html")
+def preview_list(page=None):
+    '''电影预告展示列表'''
+    if page is None:
+        page = 1
+    # paginate page 参数为页码 per_page为每页页数
+    page_data = Preview.query.order_by(
+        Preview.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/preview_list.html", page_data=page_data)
+
+
+# 删除预告
+@admin.route("/preview/del/<int:id>/", methods=['GET'])
+@admin_login_req
+def preview_del(id=None):
+    if id is None:
+        flash("未发现此电影预告", "err")
+        return redirect(url_for('admin.preview_list', page=1))
+    # 删除
+    preview = Preview.query.get_or_404(int(id))
+    db.session.delete(preview)
+    db.session.commit()
+    # 删除文件
+    os.remove(app.config['UP_PREVIEW'] + preview.logo)
+    # 闪现消息
+    flash('删除%s预告成功' % preview.title, "ok")
+    return redirect(url_for('admin.preview_list', page=1))
+
+
+# 编辑预告
+@admin.route("/preview/edit/<int:id>/", methods=['GET', 'POST'])
+@admin_login_req
+def preview_edit(id):
+    '''编辑'''
+    form = PreviewForm()
+    form.logo.validators=[]
+    # 根据ID查找数据并回显
+    preview = Preview.query.get_or_404(id)
+    if form.validate_on_submit():
+        data = form.data
+        preview_count = Preview.query.filter_by(title=data["title"]).count()
+        if preview_count != 0 and preview.title != data['title']:
+            flash("你要修改的预告名称已存在", "err")
+            return redirect(url_for('admin.preview_edit', id=id))
+        # 修改logo
+        if form.logo.data != '':
+            os.remove(app.config['UP_PREVIEW'] + preview.logo)
+            file_logo = form.logo.data.filename
+            # 把logo存入数据库
+            preview.logo = change_filename(file_logo)
+            form.logo.data.save(app.config['UP_PREVIEW'] + preview.logo)
+        # 修改数据
+        preview.title = data['title']
+        db.session.add(preview)
+        db.session.commit()
+        flash("修改预告成功", "ok")
+        return redirect(url_for("admin.preview_edit", id=preview.id))
+    # movie = movie 为给前台赋值
+    return render_template("admin/preview_edit.html", form=form, preview=preview)
 
 
 # 用户管理

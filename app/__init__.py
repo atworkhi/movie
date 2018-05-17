@@ -12,6 +12,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["SECRET_KEY"] = 'af2fad8cfe1f4c5fac4aa5edf6fcc8f3'
 # 上传电影的路径
 app.config['UP_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
+# 电影预告路径
+app.config['UP_PREVIEW'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/previews/")
 db = SQLAlchemy(app)
 
 
