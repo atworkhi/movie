@@ -10,7 +10,7 @@ from flask import render_template, redirect, url_for, session, flash, request
 # 引入表单验证
 from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm
 # 引入数据类型
-from app.modules import Admin, Tag, Movie, Preview
+from app.modules import Admin, Tag, Movie, Preview, User
 # 引入登陆装饰器
 from functools import wraps
 # 导入数据库
@@ -369,9 +369,9 @@ def preview_del(id=None):
 def preview_edit(id):
     '''编辑'''
     form = PreviewForm()
-    form.logo.validators=[]
+    form.logo.validators = []
     # 根据ID查找数据并回显
-    preview = Preview.query.get_or_404(id)
+    preview = Preview.query.get_or_404(int(id))
     if form.validate_on_submit():
         data = form.data
         preview_count = Preview.query.filter_by(title=data["title"]).count()
@@ -396,17 +396,44 @@ def preview_edit(id):
 
 
 # 用户管理
-@admin.route("/user/list/")
+@admin.route("/user/list/<int:page>/", methods=['GET'])
 @admin_login_req
-def user_list():
-    return render_template("admin/user_list.html")
+def user_list(page=None):
+    '''用户列表'''
+    if page is None:
+        page = 1
+    page_data = User.query.order_by(
+        User.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/user_list.html", page_data=page_data)
 
 
 # 用户详细信息
-@admin.route("/user/view/")
+@admin.route("/user/view/<int:id>/", methods=['GET'])
 @admin_login_req
-def user_view():
-    return render_template("admin/user_view.html")
+def user_view(id=None):
+    '''查看详细信息'''
+    user = User.query.get_or_404(int(id))
+    return render_template("admin/user_view.html", user=user)
+
+
+# 删除用户信息
+@admin.route("/user/del/<int:id>/", methods=['GET'])
+@admin_login_req
+def user_del(id=None):
+    if id is None:
+        flash("未发现要删除的用户", 'err')
+        return redirect(url_for('admin.user_list', page=1))
+    # 查找数据库
+    user = User.query.get_or_404(int(id))
+    # 删除数据库
+    db.session.delete(user)
+    db.session.commit()
+    # 删除头像文件
+    os.remove(app.config['UP_FACES'] + user.face)
+    # 闪现消息
+    flash('删除%s用户成功' % user.name, 'ok')
+    return redirect(url_for('admin.user_list', page=1))
 
 
 # 评论列表

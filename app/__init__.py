@@ -14,6 +14,8 @@ app.config["SECRET_KEY"] = 'af2fad8cfe1f4c5fac4aa5edf6fcc8f3'
 app.config['UP_DIR'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
 # 电影预告路径
 app.config['UP_PREVIEW'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/previews/")
+# 头像
+app.config['UP_FACES'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/faces/")
 db = SQLAlchemy(app)
 
 
