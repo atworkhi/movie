@@ -198,7 +198,34 @@ insert into user(name,pwd,email,phone,info,face,uuid,addtime) values('狗','1241
 insert into user(name,pwd,email,phone,info,face,uuid,addtime) values('猪','1242','1242@123.com','13888888893','猪','1f416.png','d32a72bdac524478b7e4f6dfc8394fd1',now());
 用户列表展示与删除
 ```
-
+##### 评论管理
+```
+插入测试数据
+insert into comment(movie_id,user_id,content,addtime) values(7,1,"好看",now());
+insert into comment(movie_id,user_id,content,addtime) values(7,2,"不错",now());
+insert into comment(movie_id,user_id,content,addtime) values(7,3,"经典",now());
+insert into comment(movie_id,user_id,content,addtime) values(7,4,"给力",now());
+insert into comment(movie_id,user_id,content,addtime) values(8,5,"难看",now());
+insert into comment(movie_id,user_id,content,addtime) values(8,6,"无聊",now());
+insert into comment(movie_id,user_id,content,addtime) values(8,7,"乏味",now());
+insert into comment(movie_id,user_id,content,addtime) values(8,8,"无感",now());
+```
+##### 电影收藏管理
+```
+初始化测试数据
+insert into moviecol(movie_id,user_id,addtime) values(7,1,now());
+insert into moviecol(movie_id,user_id,addtime) values(7,2,now());
+insert into moviecol(movie_id,user_id,addtime) values(7,3,now());
+insert into moviecol(movie_id,user_id,addtime) values(7,4,now());
+insert into moviecol(movie_id,user_id,addtime) values(8,5,now());
+insert into moviecol(movie_id,user_id,addtime) values(8,6,now());
+insert into moviecol(movie_id,user_id,addtime) values(8,7,now());
+insert into moviecol(movie_id,user_id,addtime) values(8,8,now());
+```
+##### 密码修改：
+```
+获取旧密码--验证旧密码--修改密码
+```
 
 
 
