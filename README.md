@@ -226,6 +226,7 @@ insert into moviecol(movie_id,user_id,addtime) values(8,8,now());
 ```
 获取旧密码--验证旧密码--修改密码
 ```
-
+##### 权限管理：
+##### 角色管理：
 
 

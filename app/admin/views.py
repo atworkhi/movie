@@ -8,9 +8,9 @@
 from . import admin
 from flask import render_template, redirect, url_for, session, flash, request
 # 引入表单验证
-from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, PwdForm
+from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, PwdForm, AuthForm, RoleForm
 # 引入数据类型
-from app.modules import Admin, Tag, Movie, Preview, User, Comment, Moviecol
+from app.modules import Admin, Tag, Movie, Preview, User, Comment, Moviecol, Auth, Role
 # 引入登陆装饰器
 from functools import wraps
 # 导入数据库
@@ -86,7 +86,7 @@ def logout():
 def pwd():
     form = PwdForm()
     if form.validate_on_submit():
-        data=form.data
+        data = form.data
         admin = Admin.query.filter_by(name=session['admin']).first()
         from werkzeug.security import generate_password_hash
         admin.pwd = generate_password_hash(data['new_pwd'])
@@ -530,31 +530,149 @@ def userlog_list():
 
 
 # 添加角色
-@admin.route("/role/add/")
+@admin.route("/role/add/", methods=['GET', 'POST'])
 @admin_login_req
 def role_add():
-    return render_template("admin/role_add.html")
+    form = RoleForm()
+    if form.validate_on_submit():
+        data = form.data
+        # 判断名称是否存在
+        role = Role.query.filter_by(name=data['name']).count()
+        if role != 0:
+            flash('您要添加的角色名称已经存在', 'err')
+            return redirect(url_for('admin.role_add'))
+        role = Role(
+            name=data['name'],
+            # 转换为字符串并用,分割
+            auths=','.join(map(lambda v: str(v), data['auths']))
+        )
+        db.session.add(role)
+        db.session.commit()
+        flash('添加角色"%s"成功' % role.name, 'ok')
+    return render_template("admin/role_add.html", form=form)
 
 
 # 角色列表
-@admin.route("/role/list/")
+@admin.route("/role/list/<int:page>", methods=['GET'])
 @admin_login_req
-def role_list():
-    return render_template("admin/role_list.html")
+def role_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Role.query.order_by(
+        Role.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/role_list.html", page_data=page_data)
+
+
+# 删除角色
+@admin.route("/role/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def role_del(id=None):
+    '''删除角色'''
+    # 根据ID查询删除的标签
+    role = Role.query.filter_by(id=id).first_or_404()
+    db.session.delete(role)
+    db.session.commit()
+    # 闪现消息
+    flash('删除"%s"角色成功' % role.name, "ok")
+    return redirect(url_for('admin.role_list', page=1))
+
+
+# 编辑角色
+@admin.route("/role/edit/<int:id>", methods=['GET', 'POST'])
+@admin_login_req
+def role_edit(id=None):
+    form = RoleForm()
+    role = Role.query.get_or_404(int(id))
+    if request.method == 'GET':
+        auths = role.auths
+        # 转换格式为int
+        form.auths.data = list(map(lambda v: int(v), auths.split(',')))
+    if form.validate_on_submit():
+        data = form.data
+        role.name = data['name']
+        role.auths = ",".join(map(lambda v: str(v), data["auths"]))
+        db.session.add(role)
+        db.session.commit()
+        flash('修改角色成功！', 'ok')
+    return render_template("admin/role_edit.html", form=form, role=role)
 
 
 # 添加权限
-@admin.route("/auth/add/")
+@admin.route("/auth/add/", methods=['GET', 'POST'])
 @admin_login_req
 def auth_add():
-    return render_template("admin/auth_add.html")
+    form = AuthForm();
+    if form.validate_on_submit():
+        data = form.data
+        # 判断权限名称是否存在
+        auth = Auth.query.filter_by(name=data['name']).count()
+        if auth != 0:
+            flash("您要添加的权限名称已经存在", 'err')
+            return redirect(url_for('admin.auth_add'))
+        # 获取数据并添加
+        auth = Auth(
+            name=data['name'],
+            url=data['url']
+        )
+        # 数据库中
+        db.session.add(auth)
+        db.session.commit()
+        flash('增加权限成功！', 'ok')
+    return render_template("admin/auth_add.html", form=form)
 
 
 # 权限列表
-@admin.route("/auth/list/")
+@admin.route("/auth/list/<int:page>/", methods=['GET'])
 @admin_login_req
-def auth_list():
-    return render_template("admin/auth_list.html")
+def auth_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Auth.query.order_by(
+        Auth.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/auth_list.html", page_data=page_data)
+
+
+# 删除权限
+@admin.route("/auth/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def auth_del(id=None):
+    '''删除权限'''
+    # 根据ID查询删除的标签
+    auth = Auth.query.filter_by(id=id).first_or_404()
+    db.session.delete(auth)
+    db.session.commit()
+    # 闪现消息
+    flash('删除"%s"权限成功' % auth.name, "ok")
+    return redirect(url_for('admin.auth_list', page=1))
+
+
+# 编辑权限
+@admin.route("/auth/edit/<int:id>", methods=['GET', 'POST'])
+@admin_login_req
+def auth_edit(id=None):
+    # 导入form
+    form = AuthForm()
+    # 获取需要修改的tag
+    auth = Auth.query.get_or_404(int(id))
+    if form.validate_on_submit():
+        # 获取页面数据
+        data = form.data
+        # 查找名称看是否存在
+        auth_count = Auth.query.filter_by(name=data["name"]).count()
+        # 判断是否修改了名称并验证是否重复
+        if auth.name != data['name'] and auth_count != 0:
+            flash("修改的权限名称已存在", "err")
+            return redirect(url_for('admin.auth_edit', id=id))
+        # 获取前段数据绑定到ORM中
+        auth.name = data['name']
+        auth.url = data['url']
+        # 添加数据库
+        db.session.add(auth)
+        db.session.commit()
+        flash("修改权限", "ok")
+    return render_template("admin/auth_edit.html", form=form, auth=auth)
 
 
 # 添加管理员

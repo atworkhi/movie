@@ -6,13 +6,16 @@
 # @Desc  : 后端form表单
 from flask_wtf import FlaskForm
 # 字段
-from wtforms import StringField, PasswordField, SubmitField, FileField, TextAreaField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, FileField, TextAreaField, SelectField, SelectMultipleField
 # 验证
 from wtforms.validators import DataRequired, ValidationError
 
 # 引入数据
-from app.modules import Admin, Tag
+from app.modules import Admin, Tag, Auth
 
+
+# tags = Tag.query.all()
+# auth_list = Auth.query.all()
 
 class LoginForm(FlaskForm):
     """后台登陆表单"""
@@ -317,3 +320,81 @@ class PwdForm(FlaskForm):
         admin = Admin.query.filter_by(name=name).first()
         if not admin.check_pwd(pwd):
             raise ValidationError("旧密码错误！")
+
+
+class AuthForm(FlaskForm):
+    name = StringField(
+        label="权限名称",
+        validators=[
+            DataRequired('请输入您要添加的权限名称！')
+        ],
+        description="权限名称",
+        render_kw={
+            "class": "form-control",
+            "id": "input_name",
+            "placeholder": "请输入您要增加的权限名称！"
+        }
+    )
+    url = StringField(
+        label="权限地址",
+        validators=[
+            DataRequired('请输入您要添加的权限地址！')
+        ],
+        description="权限地址",
+        render_kw={
+            "class": "form-control",
+            "id": "input_url",
+            "placeholder": "请输入您要增加的权限地址！"
+        }
+    )
+    submitadd = SubmitField(
+        '增加权限',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+    submitedit = SubmitField(
+        '修改权限',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+
+
+class RoleForm(FlaskForm):
+    '''角色表单'''
+    name = StringField(
+        label="角色名称",
+        validators=[
+            DataRequired('请输入角色名称！')
+        ],
+        description="角色名称",
+        render_kw={
+            "class": "form-control",
+            "id": "input_name",
+            "placeholder": "请输入您要增加的角色名称！"
+        }
+    )
+    auths = SelectMultipleField(
+        label='权限列表',
+        validators=[
+            DataRequired('请选择需要的权限')
+        ],
+        coerce=int,
+        choices=[(foo.id, foo.name) for foo in Auth.query.all()],
+        render_kw={
+            'class': 'form-control'
+        }
+    )
+    submitadd = SubmitField(
+        '新增角色',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+    submitedit = SubmitField(
+        '修改角色',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
