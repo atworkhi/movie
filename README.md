@@ -228,5 +228,32 @@ insert into moviecol(movie_id,user_id,addtime) values(8,8,now());
 ```
 ##### 权限管理：
 ##### 角色管理：
+##### 管理员的添加与列表展示(密码的验证)
+##### 添加管理员访问权限控制：
+```
+# 权限控制装饰器
+def admin_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # print(session)
+        admin = Admin.query.join(
+            Role
+        ).filter(
+            Role.id == Admin.role_id,
+            Admin.name == session['admin']
+        ).first()
+        auths = admin.role.auths
+        auths = list(map(lambda v: int(v), auths.split(",")))
+        auth_list = Auth.query.all()
+        urls = [v.url for v in auth_list for val in auths if val == v.id]
+        rule = request.url_rule
+        # print(urls)
+        url = '/'+'/'.join(str(rule).split('/')[1:3])+'/'
+        # print(url)
+        if url not in urls:
+            abort(404)
+        return f(*args, **kwargs)
 
+    return decorated_function
+  ```
 

@@ -1,5 +1,8 @@
 {#操作日志#}
 {% extends "admin/admin.html" %}
+{#分页插件#}
+{% import "ui/page_admin.html" as pg %}
+
 {% block css %}
 {% endblock %}
 {% block content %}
@@ -39,26 +42,20 @@
                                 <th>操作原因</th>
                                 <th>操作IP</th>
                             </tr>
+                            {% for foo in page_data.items %}
                             <tr>
-                                <td>1</td>
-                                <td>admin</td>
-                                <td>2017-06-01</td>
-                                <td>添加一个标签：科幻</td>
-                                <td>192.168.4.1</td>
+                                <td>{{ foo.id }}</td>
+                                <td>{{ foo.admin.name }}</td>
+                                <td>{{ foo.addtime }}</td>
+                                <td>{{ foo. reason}}</td>
+                                <td>{{ foo.ip }}</td>
                             </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <div class="box-footer clearfix">
-                        <ul class="pagination pagination-sm no-margin pull-right">
-                            <li><a href="#">首页</a></li>
-                            <li><a href="#">上一页</a></li>
-                            <li><a href="#">1</a></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#">3</a></li>
-                            <li><a href="#">下一页</a></li>
-                            <li><a href="#">尾页</a></li>
-                        </ul>
+                        {{ pg.page(page_data,"admin.oplog_list") }}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 {#用户登陆日志#}
 {% extends "admin/admin.html" %}
+{% import "ui/page_admin.html" as pg %}
 {% block css %}
 {% endblock %}
 {% block content %}
@@ -38,25 +39,19 @@
                                 <th>登录时间</th>
                                 <th>登录IP</th>
                             </tr>
+                            {% for foo in page_data.items %}
                             <tr>
-                                <td>1</td>
-                                <td>张小明</td>
-                                <td>2017-06-01</td>
-                                <td>192.168.4.1</td>
+                                <td>{{ foo.id }}</td>
+                                <td>{{ foo.user.name }}</td>
+                                <td>{{ foo.addtime }}</td>
+                                <td>{{ foo.ip }}</td>
                             </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <div class="box-footer clearfix">
-                        <ul class="pagination pagination-sm no-margin pull-right">
-                            <li><a href="#">首页</a></li>
-                            <li><a href="#">上一页</a></li>
-                            <li><a href="#">1</a></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#">3</a></li>
-                            <li><a href="#">下一页</a></li>
-                            <li><a href="#">尾页</a></li>
-                        </ul>
+                        {{ pg.page(page_data,"admin.userlog_list") }}
                     </div>
                 </div>
             </div>

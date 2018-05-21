@@ -8,10 +8,10 @@ from flask_wtf import FlaskForm
 # 字段
 from wtforms import StringField, PasswordField, SubmitField, FileField, TextAreaField, SelectField, SelectMultipleField
 # 验证
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired, ValidationError, EqualTo
 
 # 引入数据
-from app.modules import Admin, Tag, Auth
+from app.modules import Admin, Tag, Auth, Role
 
 
 # tags = Tag.query.all()
@@ -394,6 +394,64 @@ class RoleForm(FlaskForm):
     )
     submitedit = SubmitField(
         '修改角色',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+class AdminForm(FlaskForm):
+    '''管理员的表单验证'''
+    name = StringField(
+        label='管理员账号',
+        validators=[
+            DataRequired('请输入管理员账号')
+        ],
+        description='管理员账号',
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入管理员账号",
+        }
+    )
+    pwd = PasswordField(
+        label='管理员密码',
+        validators=[
+            DataRequired('请输入管理员密码')
+        ],
+        description='管理员密码',
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入管理员密码！",
+        }
+    )
+    repwd = PasswordField(
+        label='再次输入管理员密码',
+        validators=[
+            DataRequired('请再次输入管理员密码'),
+            EqualTo('pwd', message='两次输入密码不一致')
+        ],
+        description='请再次输入密码',
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请再次输入管理员密码！",
+        }
+    )
+    is_supper = SelectField(
+        label='管理员性质',
+        coerce=int,
+        choices=[(0, '超级管理员'), (1, '普通管理员')],
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    role_id = SelectField(
+        label='所属角色',
+        coerce=int,
+        choices=[(foo.id,foo.name) for foo in Role.query.all()],
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    submit = SubmitField(
+        '添加管理员',
         render_kw={
             "class": "btn btn-primary",
         }
