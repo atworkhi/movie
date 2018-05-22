@@ -10,19 +10,30 @@ from flask import render_template, redirect, url_for, flash, session, request
 from app.home.forms import *
 from app.modules import User
 from werkzeug.security import generate_password_hash
-from app import db
+from app import db, app
 from functools import wraps
-import uuid
+import uuid, os, datetime
+
 
 # 登陆装饰器
 def user_login_req(f):
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user" not in session:
             return redirect(url_for("home.login", next=request.url))
         return f(*args, **kwargs)
+
     return decorated_function
+
+
+# 修改文件名
+def change_filename(filename):
+    # 对文件名进行分割
+    fileinfo = os.path.splitext(filename)
+    # 时间搓+ uuid+ 后缀
+    filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex) + fileinfo[-1]
+    return filename
+
 
 # 主页
 @home.route("/")
@@ -49,6 +60,9 @@ def login():
     if form.validate_on_submit():
         data = form.data
         user = User.query.filter_by(name=data['name']).first()
+        if user is None:
+            flash('账号不存在！', 'err')
+            return redirect(url_for('home.login'))
         if not user.check_pwd(data['pwd']):
             flash('密码错误!', 'err')
             return redirect(url_for('home.login'))
@@ -96,10 +110,63 @@ def regist():
 
 
 # 用户中心
-@home.route("/user/")
+@home.route("/user/", methods=['GET', 'POST'])
 @user_login_req
 def user():
-    return render_template("home/user.html")
+    form = UserinfoForm()
+    user = User.query.get(int(session['user_id']))
+    # 头像可以为空
+    form.face.validators = []
+    # 判断是get回显数据
+    if request.method == 'GET':
+        form.name.data = user.name
+        form.email.data = user.email
+        form.phone.data = user.phone
+        form.info.data = user.info
+    # 提交
+    if form.validate_on_submit():
+        data = form.data
+        face_file = form.face.data.filename
+        user_face = user.face
+        # 头像存放目录不存在则创建
+        if not os.path.exists(app.config['UP_FACES']):
+            os.makedirs(app.config['UP_FACES'])
+            os.chmod(app.config['UP_FACES'], 'rw')
+        # 如果没更换则不必添加
+        if face_file != '':
+            # 重命名并保存
+            user_face = change_filename(face_file)
+            form.face.data.save(app.config['UP_FACES'] + user_face)
+            # # 删除之前头像
+            # if os.path.exists(app.config['UP_FACES'] + user.face):
+            #     os.remove(app.config['UP_FACES'] + user.face)
+        # 验证用户名 邮箱 手机号 是否已经存在
+        name_validata = User.query.filter_by(name=data['name']).count()
+        if data['name'] != user.name and name_validata != 0:
+            flash('用户账号已存在！', 'err')
+            return redirect(url_for('home.user'))
+
+        email_validata = User.query.filter_by(email=data['email']).count()
+        if data['email'] != user.email and email_validata != 0:
+            flash('邮箱已经存在!', 'err')
+            return redirect(url_for('home.user'))
+
+        phone_validata = User.query.filter_by(phone=data['phone']).count()
+        if data['phone'] != user.phone and phone_validata != 0:
+            flash('手机号码已经存在！', 'err')
+            return redirect(url_for('home.user'))
+
+        # 更改数据
+        user.name = data['name']
+        user.email = data['email']
+        user.face = user_face
+        user.phone = data['phone']
+        user.info = data['info']
+        db.session.add(user)
+        db.session.commit()
+        flash('修改成功！', 'ok')
+        return redirect(url_for('home.user'))
+    return render_template("home/user.html", form=form, user=user)
 
 
 # 修改密码

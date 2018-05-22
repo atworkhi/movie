@@ -627,7 +627,7 @@ def moviecol_del(id=None):
 
 
 # 操作日志
-@admin.route("/oplog/list/<int:page>/", methods=['GET'])
+@admin.route("/log/oplog/list/<int:page>/", methods=['GET'])
 @admin_login_req
 @admin_auth
 def oplog_list(page=None):
@@ -644,7 +644,7 @@ def oplog_list(page=None):
 
 
 # 管理员登陆日志
-@admin.route("/adminlog/list/<int:page>/", methods=['GET'])
+@admin.route("/log/adminlog/list/<int:page>/", methods=['GET'])
 @admin_login_req
 @admin_auth
 def adminlog_list(page=None):
@@ -661,7 +661,7 @@ def adminlog_list(page=None):
 
 
 # 用户登陆日志
-@admin.route("/userlog/list/<int:page>/", methods=['GET'])
+@admin.route("/log/userlog/list/<int:page>/", methods=['GET'])
 @admin_login_req
 @admin_auth
 def userlog_list(page):
