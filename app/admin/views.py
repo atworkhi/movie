@@ -93,6 +93,14 @@ def login():
             return redirect(url_for("admin.login"))
         # 绑定session
         session['admin'] = data['account']
+        session['admin_id'] = admin.id
+        # 日志的记录
+        adminlog = Adminlog(
+            admin_id=admin.id,
+            ip=request.remote_addr
+        )
+        db.session.add(adminlog)
+        db.session.commit()
         return redirect(request.args.get("next") or url_for("admin.index"))
     return render_template("admin/login.html", form=form)
 
@@ -102,6 +110,7 @@ def login():
 @admin_login_req
 def logout():
     session.pop('admin', None)
+    session.pop('admin_id', None)
     return redirect(url_for("admin.login"))
 
 
@@ -145,6 +154,15 @@ def tag_add():
         db.session.add(tag)
         db.session.commit()
         flash("新增标签成功", "ok")
+        # 操作日志
+        oplog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason="添加标签%s" % data['name']
+        )
+        db.session.add(oplog)
+        db.session.commit()
+        return redirect(url_for('admin.tag_add'))
     return render_template("admin/tag_add.html", form=form)
 
 
@@ -175,6 +193,14 @@ def tag_del(id=None):
     db.session.commit()
     # 闪现消息
     flash('删除"%s"标签成功' % tag.name, "ok")
+    # 操作日志
+    oplog = Oplog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+        reason="删除标签%s" % tag.name
+    )
+    db.session.add(oplog)
+    db.session.commit()
     return redirect(url_for('admin.tag_list', page=1))
 
 
@@ -202,6 +228,14 @@ def tag_edit(id):
         db.session.add(tag)
         db.session.commit()
         flash("修改标签名称成功", "ok")
+        # 操作日志
+        oplog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason="修改标签%s" % data['name']
+        )
+        db.session.add(oplog)
+        db.session.commit()
     return render_template("admin/tag_edit.html", form=form, tag=tag)
 
 
@@ -253,6 +287,14 @@ def movie_add():
         db.session.add(movie)
         db.session.commit()
         flash("添加电影%s成功" % movie.title, "ok")
+        # 操作日志
+        oplog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason="添加电影%s" % data['title']
+        )
+        db.session.add(oplog)
+        db.session.commit()
         return redirect(url_for('admin.movie_add'))
     return render_template("admin/movie_add.html", form=form)
 
@@ -286,6 +328,14 @@ def movie_del(id=None):
     os.remove(app.config['UP_DIR'] + movie.url)
     os.remove(app.config['UP_DIR'] + movie.logo)
     flash("删除%s电影成功！" % movie.title, "ok")
+    # 操作日志
+    oplog = Oplog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+        reason="删除电影%s" % movie.title
+    )
+    db.session.add(oplog)
+    db.session.commit()
     return redirect(url_for('admin.movie_list', page=1))
 
 
@@ -336,6 +386,14 @@ def movie_edit(id=None):
         db.session.add(movie)
         db.session.commit()
         flash("修改电影成功", "ok")
+        # 操作日志
+        oplog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason="修改电影%s" % data['title']
+        )
+        db.session.add(oplog)
+        db.session.commit()
         return redirect(url_for("admin.movie_edit", id=movie.id))
     # movie = movie 为给前台赋值
     return render_template("admin/movie_edit.html", form=form, movie=movie)
@@ -372,6 +430,14 @@ def preview_add():
         db.session.add(preview)
         db.session.commit()
         flash("添加电影预告%s成功" % preview.title, 'ok')
+        # 操作日志
+        oplog = Oplog(
+            admin_id=session['admin_id'],
+            ip=request.remote_addr,
+            reason="添加预告%s" % data['title']
+        )
+        db.session.add(oplog)
+        db.session.commit()
         return redirect(url_for('admin.preview_add'))
     return render_template("admin/preview_add.html", form=form)
 
@@ -407,6 +473,14 @@ def preview_del(id=None):
     os.remove(app.config['UP_PREVIEW'] + preview.logo)
     # 闪现消息
     flash('删除%s预告成功' % preview.title, "ok")
+    # 操作日志
+    oplog = Oplog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+        reason="删除预告%s" % preview.title
+    )
+    db.session.add(oplog)
+    db.session.commit()
     return redirect(url_for('admin.preview_list', page=1))
 
 

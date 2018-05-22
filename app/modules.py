@@ -29,6 +29,11 @@ class User(db.Model):
     def __repr__(self):
         return "<User %r>" % self.name
 
+    # 密码验证
+    def check_pwd(self, pwd):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.pwd, pwd)
+
 
 # 用户的登陆日志：
 class Userlog(db.Model):
