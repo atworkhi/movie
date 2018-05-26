@@ -256,4 +256,79 @@ def admin_auth(f):
 
     return decorated_function
   ```
+### home路由的功能实现：
+1. 对user路由下作登陆装饰器：
+```
+# 登陆装饰器
+def user_login_req(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user" not in session:
+            return redirect(url_for("home.login", next=request.url))
+        return f(*args, **kwargs)
+
+    return decorated_function
+```
+2. 用户注册 与 用户登陆 登出
+3. 实现修改密码
+4. 实现 登陆日志的分页展示
+5. 首页中上映预告的展示(5张上映预告)
+6. 首页的展示 与 条件作为参数的展示(重要)
+7. 搜索的实现
+8. 电影详情与播放
+9. 电影的评论(播放界面的评论,个人用户的评论)
+10. 电影的收藏(ajax添加收藏电影)
+11. 弹幕(redis 与 开源播放框架Dplayer.js)
+```
+redis安装:
+下载-->解压-->移动到usr/local/--> make test-->make install-->新建bin(命令)db(数据)etc(配置)
+三个文件夹 并给db权限
+配置文件
+启动redis:redis-service 配置文件
+关闭redis:redis-cli shutdown
+flask-redis 安装：
+pip install flask-redis
+配置文件
+REDIS_URL = "redis://:password@localhost:6379/0"
+# or
+REDIS_URL = "unix://[:password]@/path/to/socket.sock?db=0"
+调用
+from flask import Flask
+from flask.ext.redis import FlaskRedis
+或 from flask_redis import FlaskRedis
+
+app = Flask(__name__)
+redis_store = FlaskRedis(app)
+
+```
+
+bug:
+```
+1.在新注册用户的时候默认的是未存在头像，需要在所有关于用户的页面添加判断用户是否存在头像
+2.在电影播放页面添加滚动条
+3.用户在搜索分页时和条件筛选，需要关键字保留，单独定义一个分页，存在关键字 key
+```
+
+项目部署：centos Python3 neginx Mariadb
+```
+导入包：flask-script(程序入口)
+from flask_script import Manager
+# 指定端口与IP
+manage = Manager(app)
+
+if __name__ == "__main__":
+    manage.run()
+修改 app.debug=False
+
+获取依赖包：pip freeze > requirement.txt
+导出数据库 movie.sql
+上传到服务器：scp req.txt movie.sql root@172.16.47.10:/root/
+上传项目：scp movie root@172.16.47.10:/root/
+安装依赖(指定豆瓣源)：pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -r req.txt
+导入数据表：进入mysql -->> source /root/movie.sql
+导入到nginx: cp -r movie /usr/share/nginx/html/
+执行程序：nohup python3 manage.py runserver -h 127.0.0.1 -p 5000（自定义端口）
+```
+
+
 

@@ -21,6 +21,9 @@ from app.modules import Tag
 # filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex) + fileinfo[-1]
 # print(filename)
 
-for v in Tag.query.all():
-    print(v.id)
-    print(v.name)
+# for v in Tag.query.all():
+#     print(v.id)
+#     print(v.name)
+
+for i in range(4):
+    print(i)

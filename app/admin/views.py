@@ -278,7 +278,7 @@ def movie_add():
             star=int(data["star"]),  # 星级需要转换int
             playnum=0,
             commentnum=0,
-            tag_id=int("tag_id"),
+            tag_id=data['tag_id'],
             area=data['area'],
             release_time=data['release_time'],
             length=data['length']

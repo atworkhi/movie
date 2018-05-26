@@ -6,9 +6,10 @@
 # @Desc  : 程序入口
 
 from app import app
-from app.modules import *
-from app import db
+# from flask_script import Manager
 
+# manage = Manager(app)
 
 if __name__ == "__main__":
+    # manage.run()
     app.run()
